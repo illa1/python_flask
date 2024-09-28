@@ -1,4 +1,10 @@
-from flask import Flask, render_template
+from crypt import methods
+from datetime import datetime
+from email.policy import default
+
+from flask import request
+from flask import Flask
+from flask import render_template
 from flask_sqlalchemy import SQLAlchemy
 import os
 
@@ -19,13 +25,24 @@ class User(db.Model):
     username = db.Column(db.String(50), nullable = False)
     email = db.Column(db.String(150), nullable = False)
     password = db.Column(db.String(25), nullable = False)
+    role = db.Column(db.Integer, default = 0, nullable = False)
 
     def __repr__(self):
         return f'<User {self.username}>'
 
 
-with app.app_context():
-    db.create_all()
+class Posts(db.Model):
+    __tablename__ = 'Posts'
+    id = db.Column(db.Integer, primary_key=True)
+    post_name = db.Column(db.String(255), nullable=False)
+    post_text = db.Column(db.Text(), nullable=False)
+    post_image = db.Column(db.String(255), nullable=False)
+    continent = db.Column(db.String(255), nullable=False)
+    created_on = db.Column(db.Date(), default=datetime.utcnow())
+
+
+#with app.app_context():
+#    db.create_all()
 
 @app.route('/')
 def index():
@@ -53,6 +70,26 @@ def articles():
 @app.route('/details')
 def details():
     return render_template('details.html')
+
+@app.route('/add_user', methods=['GET', 'POST'])
+def add_user():
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+
+        new_user = User(username=username, email=email, password=password)
+        db.session.add(new_user)
+        db.session.commit()
+
+        return render_template('index.html')
+    else:
+        return render_template('add_user.html')
+
+@app.route('/add_post')
+def add_post():
+    # додаємо публікацію
+    return render_template('add_post.html')
 
 
 # Лише для локаотного сервера (закоментувати)
